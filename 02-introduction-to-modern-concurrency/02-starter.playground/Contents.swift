@@ -39,15 +39,30 @@ func fetchDomains() async throws -> [Domain] {
     return try JSONDecoder().decode(Domains.self, from: data).data
 }
 
-Task {
-    do {
-        let domains = try await fetchDomains()
-        
-        for(index, domain) in domains.enumerated() {
-            let attr = domain.attributes
-            print("\(index + 1) \(attr.name): \(attr.description) - \(attr.level)")
+func findTitle(url: URL) async throws -> String? {
+    for try await line in url.lines {
+        if line.contains("<title>") {
+            return line.trimmingCharacters(in: .whitespaces)
         }
-    } catch {
-        print(error)
+    }
+    return nil
+}
+
+Task {
+    if let title = try await findTitle(url: URL(string: "https://raywenderlich.com")!) {
+        print(title)
     }
 }
+
+//Task {
+//    do {
+//        let domains = try await fetchDomains()
+//
+//        for(index, domain) in domains.enumerated() {
+//            let attr = domain.attributes
+//            print("\(index + 1) \(attr.name): \(attr.description) - \(attr.level)")
+//        }
+//    } catch {
+//        print(error)
+//    }
+//}
