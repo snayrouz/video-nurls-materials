@@ -33,7 +33,7 @@
 import SwiftUI
 
 func fetchDomains() async throws -> [Domain] {
-    let url = URL(string: "https://api.raywanderlich.com/api/domains")!
+    let url = URL(string: "https://api.raywenderlich.com/api/domains")!
     let (data, _) = try await URLSession.shared.data(from: url)
     
     return try JSONDecoder().decode(Domains.self, from: data).data
