@@ -31,29 +31,84 @@
 /// THE SOFTWARE.
 
 import SwiftUI
+import Foundation
+import Security
 
-func fetchDomains() async throws -> [Domain] {
-    let url = URL(string: "https://api.raywenderlich.com/api/domains")!
-    let (data, _) = try await URLSession.shared.data(from: url)
-    
-    return try JSONDecoder().decode(Domains.self, from: data).data
-}
-
-func findTitle(url: URL) async throws -> String? {
-    for try await line in url.lines {
-        if line.contains("<title>") {
-            return line.trimmingCharacters(in: .whitespaces)
+let url = URL(string: "https://api.raywenderlich.com/api/domains")!
+let session = URLSession.shared.dataTask(with: url) { data, _, _ in
+    guard let data = data,
+          let domain = try? JSONDecoder().decode(Domains.self, from: data).data.first
+    else {
+        print("Reques failed")
+        return
+    }
+    Task {
+        await MainActor.run {
+            print(domain)
+            print(Thread.isMainThread)
         }
     }
-    return nil
 }
+session.resume()
 
-Task {
-    if let title = try await findTitle(url: URL(string: "https://raywenderlich.com")!) {
-        print(title)
-    }
-}
+/*
+ Actors are reference types that represent a shared mutable state.
+ Actors prevent concurrent access to their state so only one method can access the state at one time
+ */
 
+
+//func fetchDomains() async throws -> [Domain] {
+//    let url = URL(string: "https://api.raywenderlich.com/api/domains")!
+//    let (data, _) = try await URLSession.shared.data(from: url)
+//
+//    return try JSONDecoder().decode(Domains.self, from: data).data
+//}
+//
+//func findTitle(url: URL) async throws -> String? {
+//    for try await line in url.lines {
+//        if line.contains("<title>") {
+//            return line.trimmingCharacters(in: .whitespaces)
+//        }
+//    }
+//    return nil
+//}
+//
+//Task {
+//    if let title = try await findTitle(url: URL(string: "https://raywenderlich.com")!) {
+//        print(title)
+//    }
+//}
+//
+//extension Domains {
+//    static var domains: [Domain] {
+//        get async throws {
+//            try await fetchDomains()
+//        }
+//    }
+//}
+//
+//Task {
+//    dump(try await Domains.domains)
+//}
+//
+//extension Domains {
+//    enum Error: Swift.Error { case outOfRange }
+//
+//    static subscript(_ index: Int) -> String {
+//        get async throws {
+//            let domains = try await Self.domains
+//
+//            guard domains.indices.contains(index) else {
+//                throw Error.outOfRange
+//            }
+//            return domains[index].attributes.name
+//        }
+//    }
+//}
+//
+//Task {
+//    dump(try await Domains[4])
+//}
 //Task {
 //    do {
 //        let domains = try await fetchDomains()
